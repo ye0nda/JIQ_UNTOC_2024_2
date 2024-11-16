@@ -26,4 +26,7 @@ def get_folderdb():
         db.close()
 
 def init_folderdb():
+    from models import Folder 
+    from models import Quiz 
+    
     folder_Base.metadata.create_all(bind=folder_engine)
