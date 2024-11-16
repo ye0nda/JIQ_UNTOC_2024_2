@@ -1,22 +1,22 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 from dotenv import load_dotenv
 import os
 
-DB_HOST = os.environ.get("DB_HOST")
-DB_PASSWORD = os.environ.get("DB_PASSWORD")
-FOLDER_DB_NAME = os.environ.get("FOLDER_DB_NAME")
-DB_PORT = os.environ.get("DB_PORT", 3306)
+load_dotenv()
+
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
+FOLDER_DB_NAME = os.getenv("FOLDER_DB_NAME", "folder_db")
+DB_PORT = os.getenv("DB_PORT", 3306)
 
 SQLALCHEMY_DATABASE_URL_FOLDER = f"mysql+mysqlconnector://root:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{FOLDER_DB_NAME}"
 
-folder_engine = create_engine(SQLALCHEMY_DATABASE_URL_FOLDER)
-
+folder_engine = create_engine(SQLALCHEMY_DATABASE_URL_FOLDER, echo=False)
 folder_SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=folder_engine)
 
-folder_Base = declarative_base()
+class folder_Base(DeclarativeBase):
+    pass
 
 def get_folderdb():
     db = folder_SessionLocal()
