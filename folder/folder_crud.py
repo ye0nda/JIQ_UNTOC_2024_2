@@ -17,10 +17,10 @@ def create_folder(db: Session, folder_data: FolderCreate):
         db.rollback()
         raise HTTPException(status_code=400, detail="Folder already exists.")
 
-def delete_folder(db: Session, folder_name: str):
-    folder = db.query(Folder).filter(Folder.folder_name == folder_name).first()
+def delete_folder(db: Session, folder_id: int):
+    folder = db.query(Folder).filter(Folder.folder_id == folder_id).first()
     if not folder:
         raise HTTPException(status_code=404, detail="Folder not found.")
     db.delete(folder)
     db.commit()
-    return {"detail": f"Folder '{folder_name}' has been deleted."}
+    return {"detail": f"Folder has been deleted."}

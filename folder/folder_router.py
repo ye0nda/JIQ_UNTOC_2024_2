@@ -17,6 +17,6 @@ async def create_folder_endpoint(
 
     return create_folder(db=db, folder_data=folder_data)
 
-@router.delete("/delete-folder/{folder_name}")
-async def delete_folder_endpoint(folder_name: str, db: Session = Depends(get_folderdb)):
-    return delete_folder(db=db, folder_name=folder_name)
+@router.delete("/delete-folder/{folder_id}")
+async def delete_folder_endpoint(folder_id: int, db: Session = Depends(get_folderdb)):
+    return delete_folder(db=db, folder_id=folder_id)
