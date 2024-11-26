@@ -1,13 +1,15 @@
 from sqlalchemy import Column, Integer, String, JSON
-from database import folder_Base
+from database import FolderBase
+from database import QuizBase
+from database import FileBase
 
-class Folder(folder_Base):
+class Folder(FolderBase):
     __tablename__ = "folder"
 
     folder_id = Column(Integer, primary_key=True, index=True)
     folder_name = Column(String(255), unique=True, index=True, nullable=False)
 
-class Quiz(folder_Base):
+class Quiz(QuizBase):
     __tablename__ = "quiz"
 
     quiz_id = Column(Integer, primary_key=True, index=True)
@@ -15,3 +17,9 @@ class Quiz(folder_Base):
     answer = Column(String(255), nullable=False)
     options = Column(JSON, nullable=False)
     category = Column(String(255), nullable=True)
+
+class File(FileBase):
+    __tablename__ = "file"
+
+    file_id = Column(Integer, primary_key=True, index=True)
+    file_name = Column(String, nullable=False)

@@ -1,9 +1,8 @@
 from sqlalchemy.orm import Session
-from quiz.quiz_schema import QuizCreate
+from models import Quiz
 from typing import List
 
 def save_generated_quizzes(db: Session, quizzes: List[dict]):
-    from models import Quiz
     saved_quizzes = []
     for quiz in quizzes:
         db_quiz = Quiz(

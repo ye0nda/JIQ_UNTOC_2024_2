@@ -2,7 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from folder.folder_router import router as folder_router
 from quiz.quiz_router import router as quiz_router
-from database import init_folderdb
+from file.file_router import router as file_router
+from database import init_databases
 
 app = FastAPI()
 
@@ -16,10 +17,11 @@ app.add_middleware(
 
 app.include_router(folder_router, prefix="/folder", tags=["folder"])
 app.include_router(quiz_router, prefix="/quiz", tags=["quiz"])
+app.include_router(file_router, prefix="/file", tags=["file"])
 
 @app.on_event("startup")
 def on_startup():
-    init_folderdb()
+    init_databases()
 
 if __name__ == "__main__":
     import uvicorn

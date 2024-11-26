@@ -1,32 +1,61 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from dotenv import load_dotenv
 import os
 
+# .env 파일 로드
 load_dotenv()
 
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
-FOLDER_DB_NAME = os.getenv("FOLDER_DB_NAME", "folder_db")
-DB_PORT = os.getenv("DB_PORT", 3306)
+# 환경 변수에서 데이터베이스 URL 가져오기
+FOLDER_DATABASE_URL = os.getenv("FOLDER_DATABASE_URL", "mysql+pymysql://root:1029@localhost:3306/folder")
+QUIZ_DATABASE_URL = os.getenv("QUIZ_DATABASE_URL", "mysql+pymysql://root:1029@localhost:3306/quiz")
+FILE_DATABASE_URL = os.getenv("FILE_DATABASE_URL", "mysql+pymysql://root:1029@localhost:3306/file")
 
-SQLALCHEMY_DATABASE_URL_FOLDER = f"mysql+mysqlconnector://root:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{FOLDER_DB_NAME}"
+# 엔진 생성
+folder_engine = create_engine(FOLDER_DATABASE_URL, echo=False)
+quiz_engine = create_engine(QUIZ_DATABASE_URL, echo=False)
+file_engine = create_engine(FILE_DATABASE_URL, echo=False)
 
-folder_engine = create_engine(SQLALCHEMY_DATABASE_URL_FOLDER, echo=False)
-folder_SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=folder_engine)
+# 세션 로컬 생성
+FolderSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=folder_engine)
+QuizSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=quiz_engine)
+FileSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=file_engine)
 
-class folder_Base(DeclarativeBase):
+# 베이스 클래스 정의
+class FolderBase(DeclarativeBase):
     pass
 
+class QuizBase(DeclarativeBase):
+    pass
+
+class FileBase(DeclarativeBase):
+    pass
+
+# 세션 의존성 함수 정의
 def get_folderdb():
-    db = folder_SessionLocal()
+    db = FolderSessionLocal()
     try:
         yield db
     finally:
         db.close()
 
-def init_folderdb():
-    from models import Folder 
-    from models import Quiz 
-    
-    folder_Base.metadata.create_all(bind=folder_engine)
+def get_quizdb():
+    db = QuizSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+def get_filedb():
+    db = FileSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# 데이터베이스 초기화
+def init_databases():
+    from models import Folder, Quiz
+    FolderBase.metadata.create_all(bind=folder_engine)
+    QuizBase.metadata.create_all(bind=quiz_engine)
+    FileBase.metadata.create_all(bind=file_engine)
