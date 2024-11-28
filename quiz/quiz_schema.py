@@ -1,15 +1,18 @@
 from pydantic import BaseModel
-from typing import List
 
+# 요청 데이터 스키마
 class QuizCreate(BaseModel):
-    question: str
-    answer: str
-    options: List[str]
-    category: str = None
+    topic: str  # 퀴즈 주제
+    question_count: int  # 생성할 퀴즈 개수
+    type: str  # 퀴즈 타입 (예: "객관식", "주관식")
 
+# 응답 데이터 스키마
 class QuizResponse(BaseModel):
-    quiz_id: int
+    id: int
+    number: int
     question: str
     answer: str
-    options: List[str]
-    category: str
+    type: str
+
+    class Config:
+        orm_mode = True
