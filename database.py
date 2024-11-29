@@ -49,7 +49,7 @@ def get_filedb():
         db.close()
 
 def get_quizdb():
-    db = FileSessionLocal()
+    db = QuizSessionLocal()
     try:
         yield db
     finally:

@@ -13,7 +13,7 @@ class File(FileBase):
     file_id = Column(Integer, primary_key=True, index=True)
     file_name = Column(String(255), nullable=False)
 
-class Quiz(FileBase):
+class Quiz(QuizBase):
     __tablename__ = "quiz"
 
     quiz_id = Column(Integer, primary_key=True, index=True)
