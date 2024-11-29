@@ -31,23 +31,23 @@ def create_quiz_from_file(db: Session, file_path: str, quiz_data: QuizCreate):
     
     # GPT-4 Turbo API 호출
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4o-mini",  # 모델 이름 수정
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You're a problem generator. I'll give you some textual material on a subject, and you'll create questions based on it. The format of the questions can be a mix of multiple choice, essay, narrative, etc. You answer the questions in JSON format, with the fields: subject, question number, question, answer, question type, multiple choice options (if the question type is not multiple choice, just leave it blank), and commentary. Please include this in your answer. Send me the questions and answer explanations in Korean. The amount of questions should be about one question per 30 characters, so that there is a good variety. Aim for 60% multiple choice, 30% essay, and 10% narrative, based on the content suitability."
-                },
-                {
-                    "role": "user",
-                    "content": content,
-                }
-            ],
-            temperature=1,
-            max_tokens=2000,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0
+        response = openai.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+            "role": "system",
+            "content": "You're a problem generator. I'll give you some textual material on a subject, and you'll create questions based on it. The format of the questions can be a mix of multiple choice, essay, narrative, etc. You answer the questions in JSON format, with the fields: subject, question number, question, answer, question type, multiple choice options (if the question type is not multiple choice, just leave it blank), and commentary. Please include this in your answer. Send me the questions and answer explanations in Korean. The amount of questions should be about one question per 30 characters, so that there is a good variety. Aim for 60% multiple choice, 30% essay, and 10% narrative, based on the content suitability."
+            },
+            {
+            "role": "user",
+            "content": content,
+            }
+        ],
+        temperature=1,
+        max_tokens=2000,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0
         )
     except Exception as e:
         print(f"OpenAI API 호출 오류: {e}")
