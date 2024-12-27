@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, JSON, Text
-from database import FolderBase, FileBase, QuizBase
+from database import FolderBase, FileBase, QuizBase, UserBase
 
 class Folder(FolderBase):
     __tablename__ = "folder"
@@ -21,3 +21,10 @@ class Quiz(QuizBase):
     quiz_question = Column(Text, nullable=False)
     quiz_answer = Column(Text, nullable=False)
     quiz_type = Column(String(50), nullable=False)
+
+class User(UserBase):
+    __tablename__ = "users"
+    user_id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(255), unique=True, nullable=False)
+    hashed_password = Column(String(255), nullable=False)
+    email = Column(String(255), unique=True, nullable=True)

@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from .file_crud import create_file, delete_file
 from .file_schema import FileCreate, FileResponse, FileUploadResponse
 from database import get_filedb
+from quiz.quiz_crud import create_quiz_from_file
+from quiz.quiz_schema import QuizCreate
 import os
 from PyPDF2 import PdfReader
 
@@ -17,7 +19,7 @@ async def delete_folder_endpoint(file_id: int, db: Session = Depends(get_filedb)
     return delete_file(db=db, file_id=file_id)
 
 @router.post("/upload", response_model=FileUploadResponse)
-async def upload_file(file: UploadFile = File(...)):
+async def upload_and_generate_quiz(file: UploadFile = File(...), quiz_data: QuizCreate = Depends(), db: Session = Depends(get_filedb)):
     try:
         UPLOAD_DIR = "uploads"
 
@@ -40,9 +42,12 @@ async def upload_file(file: UploadFile = File(...)):
             with open(file_location, "r", encoding="utf-8") as f:
                 content = f.read()
         else:
-            raise HTTPException(status_code=400, detail="지원하지 않는 파일 형식입니다.")
-        
-        return {"filename": file.filename, "message": "파일 업로드 성공", "content": content}
+            raise HTTPException(status_code=400, detail="지원하지 않는 파일 형식입니다. txt 또는 pdf 파일만 허용됩니다.")
+
+        # 퀴즈 생성 호출
+        quizzes = create_quiz_from_file(db=db, file_content=content, quiz_data=quiz_data)
+
+        return {"filename": file.filename, "message": "퀴즈 생성 및 파일 업로드 성공", "quizzes": quizzes}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"파일 처리 중 오류가 발생했습니다: {str(e)}")
