@@ -1,18 +1,21 @@
 from pydantic import BaseModel
 
-# 요청 데이터 스키마
 class QuizCreate(BaseModel):
-    topic: str  # 퀴즈 주제
-    question_count: int  # 생성할 퀴즈 개수
-    type: str  # 퀴즈 타입 (예: "객관식", "주관식")
-
-# 응답 데이터 스키마
-class QuizResponse(BaseModel):
-    id: int
-    number: int
-    question: str
-    answer: str
+    topic: str
+    question_count: int
     type: str
+
+class QuizBase(BaseModel):
+    quiz_number: int
+    quiz_question: str
+    quiz_answer: str
+    quiz_type: str
+    user_id: int
+
+class Quiz(QuizBase):
+    quiz_id: int
 
     class Config:
         orm_mode = True
+
+        from pydantic import BaseModel

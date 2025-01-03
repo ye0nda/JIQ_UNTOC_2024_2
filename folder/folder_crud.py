@@ -1,26 +1,20 @@
 from sqlalchemy.orm import Session
 from models import Folder
-from folder.folder_schema import FolderCreate
-from fastapi import HTTPException
-from sqlalchemy.exc import IntegrityError
 
-def create_folder(db: Session, folder_data: FolderCreate):
-    db_folder = Folder(
-        folder_name=folder_data.folder_name,
-    )
-    try:
-        db.add(db_folder)
-        db.commit()
-        db.refresh(db_folder)
-        return db_folder
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(status_code=400, detail="Folder already exists.")
-
-def delete_folder(db: Session, folder_id: int):
-    folder = db.query(Folder).filter(Folder.folder_id == folder_id).first()
-    if not folder:
-        raise HTTPException(status_code=404, detail="Folder not found.")
-    db.delete(folder)
+def create_folder(db: Session, folder_name: str, user_id: int):
+    new_folder = Folder(folder_name=folder_name, user_id=user_id)
+    db.add(new_folder)
     db.commit()
-    return {"detail": f"Folder has been deleted."}
+    db.refresh(new_folder)
+    return new_folder
+
+def get_folders_by_user(db: Session, user_id: int):
+    return db.query(Folder).filter(Folder.user_id == user_id).all()
+
+def delete_folder(db: Session, folder_id: int, user_id: int):
+    folder = db.query(Folder).filter(Folder.folder_id == folder_id, Folder.user_id == user_id).first()
+    if folder:
+        db.delete(folder)
+        db.commit()
+        return {"message": "Folder deleted successfully"}
+    return {"error": "Folder not found or not authorized"}

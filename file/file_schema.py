@@ -1,14 +1,14 @@
 from pydantic import BaseModel
-from typing import Optional
 
-class FileCreate(BaseModel):
+class FileBase(BaseModel):
     file_name: str
+    user_id: int
 
-class FileResponse(BaseModel):
+class FileCreate(FileBase):
+    pass
+
+class File(FileBase):
     file_id: int
-    file_name: str
 
-class FileUploadResponse(BaseModel):
-    filename: str
-    message: str
-    content: Optional[str]
+    class Config:
+        orm_mode = True
