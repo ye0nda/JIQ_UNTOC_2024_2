@@ -12,8 +12,6 @@ from models import Quiz
 from datetime import datetime
 import json
 
-openai.api_key = "your_openai_api_key"
-
 def generate_quiz_from_file(file_text: str, user_id: int, db: Session):
     """GPT를 사용하여 파일 텍스트에서 퀴즈를 생성합니다."""
     try:
@@ -39,13 +37,12 @@ def generate_quiz_from_file(file_text: str, user_id: int, db: Session):
 
         quiz_data = response["choices"][0]["message"]["content"]
         quizzes = parse_quiz_response(quiz_data)
-
         for item in quizzes:
             new_quiz = Quiz(
-                quiz_number=item["question number"],
+                quiz_number=item["question_number"],
                 quiz_question=item["question"],
                 quiz_answer=item["answer"],
-                quiz_type=item["question type"],
+                quiz_type=item["question_type"],
                 user_id=user_id,
                 created_at=datetime.utcnow(),
             )
@@ -56,9 +53,37 @@ def generate_quiz_from_file(file_text: str, user_id: int, db: Session):
     except Exception as e:
         raise Exception(f"Failed to generate quiz: {str(e)}")
 
+import json
+
 def parse_quiz_response(quiz_data: str):
-    """JSON 형태의 퀴즈 데이터를 파싱"""
+    """
+    JSON 형식의 퀴즈 데이터를 리스트로 변환합니다.
+    
+    Args:
+        quiz_data (str): JSON 형식의 문자열 데이터.
+    
+    Returns:
+        list[dict]: 퀴즈 목록.
+    
+    Raises:
+        ValueError: JSON 데이터가 유효하지 않을 때.
+    """
     try:
-        return json.loads(quiz_data)
+        # JSON 데이터 파싱
+        parsed_data = json.loads(quiz_data)
+        
+        # 리스트 형식인지 확인
+        if not isinstance(parsed_data, list):
+            raise ValueError("JSON 데이터는 리스트 형식이어야 합니다.")
+
+        # 필수 필드 확인
+        for item in parsed_data:
+            if not all(key in item for key in ["question_number", "question", "answer", "question_type"]):
+                raise ValueError(f"퀴즈 데이터에 필요한 필드가 누락되었습니다: {item}")
+
+        return parsed_data  # 파싱된 리스트 반환
+
     except json.JSONDecodeError as e:
-        raise Exception(f"Failed to parse quiz data: {str(e)}")
+        raise ValueError(f"JSON 파싱 오류: {str(e)}")
+    except Exception as e:
+        raise ValueError(f"예기치 않은 오류 발생: {str(e)}")
