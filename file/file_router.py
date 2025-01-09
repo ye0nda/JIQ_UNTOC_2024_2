@@ -5,7 +5,7 @@ import shutil
 router = APIRouter(prefix="/file", tags=["file"])
 
 UPLOAD_DIR = "uploaded_files"
-os.makedirs(UPLOAD_DIR, exist_ok=True)  # 업로드 디렉터리 생성
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 @router.post("/upload")
