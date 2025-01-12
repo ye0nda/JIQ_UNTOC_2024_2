@@ -1,23 +1,26 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database import get_retrydb
-from retry.retry_crud import save_retry, get_incorrect_retries
-from retry.retry_schema import RetryCreate, Retry
-from user.user_router import get_current_user
+from database import get_quizdb
+from quiz.quiz_crud import process_quiz_generation
+import os
 
-router = APIRouter(prefix="/retry", tags=["retry"])
+router = APIRouter(prefix="/quiz", tags=["quiz"])
 
-@router.post("/", response_model=Retry)
-async def save_retry_attempt(
-    retry_data: RetryCreate, db: Session = Depends(get_retrydb), current_user = Depends(get_current_user)
+@router.post("/generate-from-file")
+async def generate_quiz_from_file_path(
+    file_path: str, db: Session = Depends(get_quizdb)
 ):
+    """
+    프론트엔드에서 전달된 파일 경로를 기반으로 퀴즈를 생성합니다.
+    """
     try:
-        return save_retry(db, current_user.id, retry_data.quiz_id, retry_data.is_correct)
+        # 파일 확인
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="File not found")
+
+        # CRUD 함수 호출 (텍스트 추출 및 처리 로직을 CRUD로 이동)
+        response = process_quiz_generation(file_path, db)
+
+        return {"message": "Quiz generated successfully", "result": response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-@router.get("/", response_model=list[Retry])
-async def get_user_incorrect_retries(
-    db: Session = Depends(get_retrydb), current_user = Depends(get_current_user)
-):
-    return get_incorrect_retries(db, current_user.id)

@@ -35,5 +35,7 @@ class User(UserBase):
 class Quiz(QuizBase):
     __tablename__ = "quizzes"
     id = Column(Integer, primary_key=True, index=True)
-    question = Column(String(255), nullable=False)  # VARCHAR(255)
-    answer = Column(String(255), nullable=False)  # VARCHAR(255)
+    quiz_number = Column(Integer, nullable=False)  # 새 필드 추가
+    quiz_question = Column(String(255), nullable=False)
+    quiz_answer = Column(String(255), nullable=False)
+    quiz_type = Column(String(50), nullable=False)
