@@ -15,13 +15,13 @@ class Retry(RetryBase):
 class Folder(FolderBase):
     __tablename__ = "folder"
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255), nullable=False)  # VARCHAR(255)로 길이 지정
+    folder_name = Column(String(255), nullable=False)  # VARCHAR(255)로 길이 지정
 
 # File 테이블
 class File(FileBase):
     __tablename__ = "files"
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255), nullable=False)  # VARCHAR(255)로 길이 지정
+    file_name = Column(String(255), nullable=False)  # VARCHAR(255)로 길이 지정
 
 # User 테이블
 class User(UserBase):
