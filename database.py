@@ -81,7 +81,9 @@ def get_retrydb():
 
 # 데이터베이스 초기화 함수
 def init_databases():
-    from models import User, Quiz, Retry
+    from models import Folder, File, User, Quiz, Retry
+    FolderBase.metadata.create_all(bind=folder_engine)
+    FileBase.metadata.create_all(bind=file_engine)
     UserBase.metadata.create_all(bind=user_engine)
     QuizBase.metadata.create_all(bind=quiz_engine)
     RetryBase.metadata.create_all(bind=retry_engine)

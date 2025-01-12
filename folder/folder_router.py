@@ -9,7 +9,10 @@ router = APIRouter(prefix="/folder", tags=["folder"])
 
 @router.post("/folder/")
 def create_new_folder(folder: FolderCreate, db: Session = Depends(get_folderdb)):
-    new_folder = Folder(folder_name=folder.folder_name)  # 필드 이름 맞춤
+    new_folder = Folder(  # SQLAlchemy 객체 생성
+        folder_name=folder.folder_name,  # `FolderCreate`에서 받은 데이터 사용
+        user_id=folder.user_id
+    )
     db.add(new_folder)
     db.commit()
     db.refresh(new_folder)
