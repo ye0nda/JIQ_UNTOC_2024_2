@@ -7,12 +7,13 @@ from typing import List
 
 router = APIRouter(prefix="/folder", tags=["folder"])
 
-@router.post("/", response_model=Folder)
-async def create_new_folder(folder_data: FolderCreate, db: Session = Depends(get_folderdb)):
-    try:
-        return create_folder(db, folder_data.folder_name, folder_data.user_id)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+@router.post("/folder/")
+def create_new_folder(folder: FolderCreate, db: Session = Depends(get_folderdb)):
+    new_folder = Folder(folder_name=folder.folder_name)  # 필드 이름 맞춤
+    db.add(new_folder)
+    db.commit()
+    db.refresh(new_folder)
+    return new_folder
 
 @router.get("/", response_model=List[Folder])
 async def get_user_folders(user_id: int, db: Session = Depends(get_folderdb)):
