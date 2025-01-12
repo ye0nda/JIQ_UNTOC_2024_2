@@ -4,6 +4,7 @@ from database import get_retrydb
 from retry.retry_crud import save_retry, get_incorrect_retries
 from retry.retry_schema import RetryCreate, Retry
 from user.user_router import get_current_user  # 사용자 인증
+from typing import List
 
 router = APIRouter(prefix="/retry", tags=["retry"])
 
@@ -24,7 +25,7 @@ async def save_retry_attempt(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"오답 기록 저장 실패: {str(e)}")
 
-@router.get("/", response_model=list[Retry])
+@router.get("/", response_model=List[Retry])
 async def get_user_incorrect_retries(
     db: Session = Depends(get_retrydb),
     current_user: dict = Depends(get_current_user)
