@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_quizdb
-from quiz.quiz_crud import process_quiz_generation
+from quiz.quiz_crud import generate_quiz_from_file
 import os
 
 router = APIRouter(prefix="/quiz", tags=["quiz"])
@@ -19,7 +19,7 @@ async def generate_quiz_from_file_path(
             raise HTTPException(status_code=404, detail="File not found")
 
         # CRUD 함수 호출 (텍스트 추출 및 처리 로직을 CRUD로 이동)
-        response = process_quiz_generation(file_path, db)
+        response =generate_quiz_from_file(file_path, db)
 
         return {"message": "Quiz generated successfully", "result": response}
     except Exception as e:
