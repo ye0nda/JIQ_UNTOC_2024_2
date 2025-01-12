@@ -40,4 +40,4 @@ class Quiz(QuizBase):
     quiz_question = Column(String(255), nullable=False)
     quiz_answer = Column(String(255), nullable=False)
     quiz_type = Column(String(50), nullable=False)
-    file_path = Column(String(255), nullable=True)
+    folder_id = Column(Integer, primary_key=True, index=True)
