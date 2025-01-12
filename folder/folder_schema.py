@@ -7,7 +7,7 @@ class FolderCreate(FolderBase):
     pass
 
 class Folder(FolderBase):
-    id: int
+    folder_id: int
 
     class Config:
         orm_mode = True

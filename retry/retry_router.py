@@ -19,7 +19,7 @@ async def save_retry_attempt(
     """
     try:
         saved_retry = save_retry(
-            db, current_user["id"], retry_data.quiz_id, retry_data.is_correct
+            db, current_user["user_id"], retry_data.quiz_id, retry_data.is_correct
         )
         return saved_retry
     except Exception as e:
@@ -34,7 +34,7 @@ async def get_user_incorrect_retries(
     현재 사용자의 오답 기록을 조회합니다.
     """
     try:
-        retries = get_incorrect_retries(db, current_user["id"])
+        retries = get_incorrect_retries(db, current_user["user_id"])
         return retries
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"오답 기록 조회 실패: {str(e)}")
