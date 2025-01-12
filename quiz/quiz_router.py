@@ -5,6 +5,7 @@ from quiz.quiz_crud import generate_quiz_from_file, extract_text_from_file
 import os
 from pydantic import BaseModel
 from models import Quiz, Retry
+from typing import List
 
 router = APIRouter(prefix="/quiz", tags=["quiz"])
 
@@ -13,7 +14,7 @@ class UserAnswer(BaseModel):
     user_answer: str
 
 class SubmitAnswersRequest(BaseModel):
-    answers: list[UserAnswer]
+    answers: List[UserAnswer]
 
 # 파일 경로 기반 퀴즈 생성 엔드포인트
 @router.post("/generate-from-file")
