@@ -19,9 +19,9 @@ class Folder(FolderBase):
 # Quiz 테이블
 class Quiz(QuizBase):
     __tablename__ = "quizzes"
-    quiz_id = Column(Integer, primary_key=True, index=True)
-    quiz_number = Column(Integer, nullable=False)  # 새 필드 추가
+    quiz_id = Column(Integer, primary_key=True, index=True, autoincrement=True)  # autoincrement 추가
+    quiz_number = Column(Integer, nullable=False)
     quiz_question = Column(String(255), nullable=False)
     quiz_answer = Column(String(255), nullable=False)
     quiz_type = Column(String(50), nullable=False)
-    folder_id = Column(Integer, primary_key=True, index=True)
+    folder_id = Column(Integer, nullable=True)  # folder_id도 수정 필요
