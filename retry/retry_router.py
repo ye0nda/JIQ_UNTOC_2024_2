@@ -7,6 +7,7 @@ from typing import List
 
 router = APIRouter(prefix="/retry", tags=["retry"])
 
+@router.post("/", response_model=Retry)
 async def save_retry_attempt(
     retry_data: RetryCreate,
     db: Session = Depends(get_retrydb)
