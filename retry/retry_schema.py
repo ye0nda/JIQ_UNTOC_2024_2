@@ -2,7 +2,6 @@ from pydantic import BaseModel
 from datetime import datetime
 
 class RetryBase(BaseModel):
-    user_id: int
     quiz_id: int
     is_correct: bool = False
     attempted_at: datetime = None

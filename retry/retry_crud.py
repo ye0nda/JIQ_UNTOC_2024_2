@@ -1,12 +1,8 @@
 from sqlalchemy.orm import Session
 from models import Retry
 
-def save_retry(db: Session, user_id: int, quiz_id: int, is_correct: bool):
-    """
-    오답 기록을 저장합니다.
-    """
+def save_retry(db: Session, quiz_id: int, is_correct: bool):
     retry = Retry(
-        user_id=user_id,
         quiz_id=quiz_id,
         is_correct=is_correct,
     )
