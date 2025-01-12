@@ -7,6 +7,7 @@ from user.user_schema import UserCreate, UserLogin, UserResponse
 import os
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
+from typing import Union
 
 # 비밀번호 해싱을 위한 설정
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -18,7 +19,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 router = APIRouter(prefix="/user", tags=["user"])
 
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
+def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None):
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
@@ -26,6 +27,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
 
 def get_current_user(token: str, db: Session = Depends(get_userdb)):
     try:
