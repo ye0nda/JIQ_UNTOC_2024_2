@@ -15,7 +15,7 @@ class Retry(RetryBase):
 class Folder(FolderBase):
     __tablename__ = "folder"
     id = Column(Integer, primary_key=True, index=True)
-    folder_name = Column(String(255), nullable=False)  # VARCHAR(255)로 길이 지정
+    folder_name = Column(String(255), nullable=False)
 
 # File 테이블
 class File(FileBase):
