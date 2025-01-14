@@ -23,5 +23,6 @@ class Quiz(QuizBase):
     quiz_number = Column(Integer, nullable=False)
     quiz_question = Column(String(255), nullable=False)
     quiz_answer = Column(String(255), nullable=False)
+    user_answer = Column(String(255), nullable=False)
     quiz_type = Column(String(50), nullable=False)
     folder_id = Column(Integer, nullable=True)  # folder_id도 수정 필요

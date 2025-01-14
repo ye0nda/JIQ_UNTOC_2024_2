@@ -40,6 +40,27 @@ async def generate_quiz_from_file_path(
         return {"message": "Quiz generated successfully", "result": response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/user-answers")
+async def get_user_answers(request: SubmitAnswersRequest, db: Session = Depends(get_quizdb)) :
+    """
+    사용자가 제출한 답변을 데이터 베이스에 저장합니다.
+    """
+    try:
+        for user_answer in request.answers:
+            #답변 저장
+            user_answer_entry = UserAnswerEntry(
+                quiz_id=user_answer.quiz_id,
+                user_id=1,  # 사용자 ID (로그인 기능 있으면 연결)
+                user_answer=user_answer.user_answer
+            )
+            db.add(user_answer_entry)
+
+        db.commit()
+
+        return {"message": "Answers saved successfully"}
+    except Exception as e:
+        raise HTTPException(statuse_code=500, detail=str(e))
     
 @router.post("/submit")
 async def submit_answers(
