@@ -12,6 +12,7 @@ QUIZ_DATABASE_URL = os.getenv("QUIZ_DATABASE_URL", "mysql+pymysql://root:passwor
 RETRY_DATABASE_URL = os.getenv("RETRY_DATABASE_URL", "mysql+pymysql://root:password@localhost:3306/retry")
 
 # 엔진 생성
+# folder_engine = create_engine(FOLDER_DATABASE_URL, echo=False)
 folder_engine = create_engine(FOLDER_DATABASE_URL, echo=False)
 quiz_engine = create_engine(QUIZ_DATABASE_URL, echo=False)
 retry_engine = create_engine(RETRY_DATABASE_URL, echo=False)

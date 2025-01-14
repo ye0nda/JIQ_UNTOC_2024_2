@@ -10,7 +10,6 @@ class QuizBase(BaseModel):
     quiz_question: str
     quiz_answer: str
     quiz_type: str
-    user_id: int
 
 class Quiz(QuizBase):
     quiz_id: int
