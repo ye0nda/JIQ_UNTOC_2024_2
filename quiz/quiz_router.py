@@ -6,6 +6,7 @@ import os
 from pydantic import BaseModel
 from models import Quiz, Retry
 from typing import List
+from retry.retry_crud import save_retry
 
 router = APIRouter(prefix="/quiz", tags=["quiz"])
 
@@ -90,16 +91,11 @@ async def submit_answers(
                     "user_answer": user_answer.user_answer,
                 })
                 is_correct = False
+                
 
-            # Retry 테이블에 기록 (선택 사항)
-            retry_entry = Retry(
-                quiz_id=quiz.quiz_id,
-                user_id=1,  # 사용자 ID (로그인 기능이 있다면 연결 필요)
-                is_correct=is_correct,
-            )
-            db.add(retry_entry)
-
-        db.commit()
+            # Retry 테이블에 저장
+            save_retry(db, incorrect_answers=incorrect_questions)
+            
 
         return {
             "message": "Answers submitted successfully",
