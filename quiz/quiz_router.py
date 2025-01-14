@@ -49,9 +49,8 @@ async def get_user_answers(request: SubmitAnswersRequest, db: Session = Depends(
     try:
         for user_answer in request.answers:
             #답변 저장
-            user_answer_entry = UserAnswerEntry(
+            user_answer_entry = Quiz(
                 quiz_id=user_answer.quiz_id,
-                user_id=1,  # 사용자 ID (로그인 기능 있으면 연결)
                 user_answer=user_answer.user_answer
             )
             db.add(user_answer_entry)
