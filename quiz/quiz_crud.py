@@ -41,7 +41,7 @@ def generate_quiz_from_file(file_text: str, db: Session, max_questions: int = 10
     """
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-4o-mini",
             messages=[
                 {
                     "role": "system",
