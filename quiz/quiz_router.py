@@ -133,9 +133,6 @@ async def submit_answers(
 async def get_quiz(quiz_id: int, db: Session = Depends(get_quizdb)):
     try:
         quizzes = db.query(Quiz).filter(Quiz.quiz_id == quiz_id).order_by(Quiz.quiz_number).all()
-        print(f"Fetched quizzes: {quizzes}")
-        print(f"Number of quizzes fetched: {len(quizzes)}")
-
 
         if not quizzes:
             raise HTTPException(status_code=404, detail=f"Quiz ID {quiz_id} not found")
