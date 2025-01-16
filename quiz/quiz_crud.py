@@ -163,16 +163,29 @@ def save_user_answer(db: Session, answers: List[dict]):
     """
     try:
         for answer in answers:
-            entry = Quiz(
+            # 기존 데이터 조회
+            quiz = db.query(Quiz).filter_by(
                 quiz_id=answer["quiz_id"],
-                user_answer=answer["user_answer"]
-            )
-            db.add(entry)
+                quiz_number=answer["quiz_number"]
+            ).first()
+
+            if quiz:
+                # 기존 데이터가 있으면 업데이트
+                quiz.user_answer = answer["user_answer"]
+            else:
+                # 기존 데이터가 없으면 새로 추가
+                new_entry = Quiz(
+                    quiz_id=answer["quiz_id"],
+                    quiz_number=answer["quiz_number"],
+                    user_answer=answer["user_answer"]
+                )
+                db.add(new_entry)
 
         db.commit()
     except Exception as e:
         db.rollback()
         raise Exception(f"사용자 답변 저장 실패: {str(e)}")
+
 
 def split_text_by_limit(text: str, max_length: int = 8000) -> List[str]:
     """
