@@ -145,25 +145,29 @@ async def get_quiz(quiz_id: int, db: Session = Depends(get_quizdb)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/results/{quiz_id}")
-async def get_quiz_results(quiz_id: int, db: Session = Depends(get_retrydb)):
+@router.get("/quiz-results/{quiz_id}")
+async def get_quiz_results(
+    quiz_id: int, db: Session = Depends(get_retrydb)
+):
     """
-    주어진 퀴즈 ID에 대한 각 문제의 정답 여부만 반환합니다.
+    주어진 quiz_id에 대한 각 문제의 정답 여부를 반환합니다.
     """
     try:
-        # Retry 테이블에서 해당 quiz_id에 대한 데이터 조회
+        # Retry 테이블에서 해당 quiz_id의 데이터 조회
         retries = db.query(Retry).filter(Retry.quiz_id == quiz_id).order_by(Retry.quiz_number).all()
 
         if not retries:
-            raise HTTPException(status_code=404, detail=f"No retry data found for Quiz ID {quiz_id}")
+            raise HTTPException(status_code=404, detail=f"No results found for Quiz ID {quiz_id}")
 
-        # 결과 생성
-        results = []
-        for retry in retries:
-            results.append({
+        # 필요한 데이터만 반환
+        results = [
+            {
+                "quiz_id": retry.quiz_id,
                 "quiz_number": retry.quiz_number,
                 "is_correct": retry.is_correct
-            })
+            }
+            for retry in retries
+        ]
 
         return {
             "quiz_id": quiz_id,
@@ -171,4 +175,3 @@ async def get_quiz_results(quiz_id: int, db: Session = Depends(get_retrydb)):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving quiz results: {str(e)}")
-
