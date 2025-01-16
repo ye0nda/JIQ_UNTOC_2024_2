@@ -5,6 +5,7 @@ from PyPDF2 import PdfReader
 import os
 from models import Quiz
 from datetime import datetime
+from typing import List
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -141,7 +142,7 @@ def normalize_keys(data):
         return {key.replace(" ", "_"): value for key, value in data.items()}
     return data
 
-def save_user_answer(db: Session, answers: list[dict]):
+def save_user_answer(db: Session, answers: List[dict]):
     """
     사용자 답변을 데이터베이스에 저장합니다.
     :param db: 데이터베이서 세션
