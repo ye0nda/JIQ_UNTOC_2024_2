@@ -2,8 +2,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy.future import select # 비동기 쿼리용
 from datetime import datetime
 from models import Retry
+from typing import List
 
-def save_retry(db: Session, incorrect_answers: list[dict]):
+def save_retry(db: Session, incorrect_answers: List[dict]):
     """
     오답 데이터를 데이터베이스에 저장합니다.
     :param db: 데이터베이스 세션
