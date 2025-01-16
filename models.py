@@ -7,6 +7,7 @@ class Retry(RetryBase):
     __tablename__ = "retry_attempts"
     retry_id = Column(Integer, primary_key=True, index=True) # 퀴즈 아이디랑 같게게
     quiz_id = Column(Integer)
+    quiz_number = Column(Integer, nullable=False)
     user_answer = Column(String(255), nullable=False) # 사용자가 제출한 답변
     correct_answer = Column(String(255), nullable=False) # 정답
     retry_question = Column(String(255), nullable=False) # 질문 내용
@@ -26,4 +27,5 @@ class Quiz(QuizBase):
     quiz_question = Column(String(255), nullable=False)
     quiz_answer = Column(String(255), nullable=False)
     quiz_type = Column(String(50), nullable=False)
+    user_answer = Column(String(255), nullable=False)
     folder_id = Column(Integer, nullable=True)  # folder_id도 수정 필요
