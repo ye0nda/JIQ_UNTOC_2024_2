@@ -22,7 +22,7 @@ class Folder(FolderBase):
 class Quiz(QuizBase):
     __tablename__ = "quizzes"
     quiz_id = Column(Integer, primary_key=True, index=True, autoincrement=True)  # autoincrement 추가
-    quiz_number = Column(Integer, nullable=False)
+    quiz_number = Column(Integer, primary_key=True)
     quiz_question = Column(String(255), nullable=False)
     quiz_answer = Column(String(255), nullable=False)
     quiz_type = Column(String(50), nullable=False)

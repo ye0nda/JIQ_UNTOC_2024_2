@@ -60,7 +60,7 @@ async def generate_quiz_from_uploaded_file(
         # quiz_id를 문자열로 변환하여 반환
         return {
             "message": "Quiz generated successfully",
-            "quiz_id": str(quiz_id),  # 문자열 변환
+            "quiz_id": quiz_id,  # 문자열 변환
             "result": all_questions,
         }
     except Exception as e:
@@ -126,5 +126,32 @@ async def submit_answers(
             "incorrect_questions": incorrect_questions
         }
 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/get-quiz/{quiz_id}")
+async def get_quiz(quiz_id: int, db: Session = Depends(get_quizdb)):
+    try:
+        quizzes = db.query(Quiz).filter(Quiz.quiz_id == quiz_id).order_by(Quiz.quiz_number).all()
+        print(f"Fetched quizzes: {quizzes}")
+        print(f"Number of quizzes fetched: {len(quizzes)}")
+
+
+        if not quizzes:
+            raise HTTPException(status_code=404, detail=f"Quiz ID {quiz_id} not found")
+
+        quiz_list = [
+            {
+                "quiz_number": quiz.quiz_number,
+                "quiz_question": quiz.quiz_question,
+            }
+            for quiz in quizzes
+        ]
+        print(f"Quiz List: {quiz_list}")
+
+        return {
+            "quiz_id": quiz_id,
+            "quizzes": quiz_list,
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

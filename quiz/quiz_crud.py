@@ -74,10 +74,22 @@ def generate_quiz_from_file(file_text: str, db: Session, quiz_id: int, max_quest
         if not isinstance(quizzes, list):
             raise ValueError("응답 데이터가 JSON 배열 형식이 아닙니다.")
 
-        quizzes = quizzes[:max_questions]
+        # 기존 quiz_number 확인 및 초기화
+        existing_numbers = db.query(Quiz.quiz_number).filter(Quiz.quiz_id == quiz_id).all()
+        existing_numbers = {num[0] for num in existing_numbers}
+        current_number = 1
+
+        total_questions = db.query(Quiz).filter(Quiz.quiz_id == quiz_id).count()
 
         for idx, item in enumerate(quizzes[:max_questions], start=1):
-            question_number = item.get("question_number", idx)
+            if total_questions >= max_questions:
+                break
+
+            # 중복되지 않는 quiz_number 생성
+            while current_number in existing_numbers:
+                current_number += 1
+
+            question_number = current_number
             question = item.get("question")
             answer = item.get("answer")
 
@@ -92,10 +104,15 @@ def generate_quiz_from_file(file_text: str, db: Session, quiz_id: int, max_quest
                 quiz_answer=answer,
                 quiz_type="short_answer",
             )
+            print(f"Attempting to save quiz {question_number}: {question}")
             db.add(new_quiz)
+            db.commit()
+            print(f"Quiz saved: {new_quiz}")
+            existing_numbers.add(current_number)  # 추가된 번호를 기록
+            total_questions += 1
 
         db.commit()
-        return {"message": f"Quiz {str(quiz_id)} created successfully", "quiz_id": str(quiz_id)}
+        return {"message": f"Quiz {quiz_id} created successfully", "quiz_id": quiz_id}
 
     except Exception as e:
         db.rollback()
