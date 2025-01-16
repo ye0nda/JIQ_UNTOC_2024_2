@@ -49,7 +49,7 @@ def generate_quiz_from_file(file_text: str, db: Session, quiz_id: int, max_quest
                     "content": (
                         f"당신은 문제 생성기입니다. 제가 특정 주제에 대한 텍스트 자료를 제공하면, "
                         f"이를 기반으로 최대 {max_questions}개의 단답형(short_answer) 문제를 생성해주세요. "
-                        f"답변은 항상 하나의 단어로만 구성되어야 합니다. "
+                        f"답변은 항상 하나 혹은 두 개의 단어로만 구성되어야 합니다. "
                         f"문제는 JSON 형식으로 구성되며, 필드는 다음과 같습니다: question number, question, answer."
                     )
                 },
