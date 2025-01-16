@@ -163,8 +163,8 @@ def save_user_answer(db: Session, answers: List[dict]):
         for answer in answers:
             # 기존 Quiz에서 quiz_question과 quiz_answer 가져오기
             quiz = db.query(Quiz).filter(
-                Quiz.quiz_id == answer["quiz_id"],
-                Quiz.quiz_number == answer["quiz_number"]
+                Quiz.quiz_id == answer.quiz_id,
+                Quiz.quiz_number == answer.quiz_number
             ).first()
 
             if not quiz:
