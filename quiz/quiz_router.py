@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from database import get_quizdb, get_retrydb
-from quiz.quiz_crud import generate_quiz_from_file, extract_text_from_file, split_text_by_limit
+from quiz.quiz_crud import generate_quiz_from_file, extract_text_from_file, split_text_by_limit, save_user_answer
 from pydantic import BaseModel
 from models import Quiz, Retry
 from typing import List
@@ -67,26 +67,19 @@ async def generate_quiz_from_uploaded_file(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-def save_user_answer(db: Session, answers: List[dict], user_id: int):
+@router.post("/user-answers")
+async def submit_user_answers(
+    request: SubmitAnswersRequest, db: Session = Depends(get_quizdb)
+):
     """
-    사용자 답변을 user_answers 테이블에 저장합니다.
+    사용자의 답변을 저장합니다.
     """
     try:
-        for answer in answers:
-            # 새로운 사용자 응답 데이터 생성
-            new_entry = UserAnswer(
-                quiz_id=answer["quiz_id"],
-                quiz_number=answer["quiz_number"],
-                user_id=user_id,  # 사용자 ID
-                user_answer=answer["user_answer"],
-                is_correct=None  # 정답 여부는 채점 후 업데이트
-            )
-            db.add(new_entry)
-
-        db.commit()
+        save_user_answer(db, request.answers, request.user_id)
+        return {"message": "User answers saved successfully"}
     except Exception as e:
-        db.rollback()
-        raise Exception(f"사용자 답변 저장 실패: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/submit")
 async def submit_answers(

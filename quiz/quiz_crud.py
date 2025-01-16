@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 import json
 from PyPDF2 import PdfReader
 import os
-from models import Quiz
+from models import Quiz, Retry
 from datetime import datetime
 from typing import List
 import uuid
@@ -155,36 +155,40 @@ def normalize_keys(data):
         return {key.replace(" ", "_"): value for key, value in data.items()}
     return data
 
-def save_user_answer(db: Session, answers: List[dict]):
+def save_user_answer(db: Session, answers: List[dict], user_id: int):
     """
-    사용자 답변을 데이터베이스에 저장합니다.
-    :param db: 데이터베이서 세션
-    :param answers: 사용자 답변 리스트 [{"quiz_id": int, "user_answer": str}]
+    사용자 답변을 user_answers 테이블에 저장합니다.
     """
     try:
         for answer in answers:
-            # 기존 데이터 조회
-            quiz = db.query(Quiz).filter_by(
-                quiz_id=answer["quiz_id"],
-                quiz_number=answer["quiz_number"]
+            # 기존 Quiz에서 quiz_question과 quiz_answer 가져오기
+            quiz = db.query(Quiz).filter(
+                Quiz.quiz_id == answer["quiz_id"],
+                Quiz.quiz_number == answer["quiz_number"]
             ).first()
 
-            if quiz:
-                # 기존 데이터가 있으면 업데이트
-                quiz.user_answer = answer["user_answer"]
-            else:
-                # 기존 데이터가 없으면 새로 추가
-                new_entry = Quiz(
-                    quiz_id=answer["quiz_id"],
-                    quiz_number=answer["quiz_number"],
-                    user_answer=answer["user_answer"]
+            if not quiz:
+                raise ValueError(
+                    f"Quiz with quiz_id {answer['quiz_id']} and quiz_number {answer['quiz_number']} not found."
                 )
-                db.add(new_entry)
+
+            # 새로운 사용자 응답 데이터 생성
+            new_entry = Retry(
+                quiz_id=quiz.quiz_id,
+                quiz_number=quiz.quiz_number,
+                user_id=user_id,  # 사용자 ID
+                user_answer=answer["user_answer"],
+                retry_question=quiz.quiz_question,  # quiz_question 자동 가져오기
+                correct_answer=quiz.quiz_answer,  # quiz_answer 자동 가져오기
+                is_correct=(quiz.quiz_answer.strip().lower() == answer["user_answer"].strip().lower())  # 정답 여부 판정
+            )
+            db.add(new_entry)
 
         db.commit()
     except Exception as e:
         db.rollback()
         raise Exception(f"사용자 답변 저장 실패: {str(e)}")
+
 
 
 def split_text_by_limit(text: str, max_length: int = 8000) -> List[str]:
