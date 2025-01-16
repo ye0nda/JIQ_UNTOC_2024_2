@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
 from database import get_quizdb
 from quiz.quiz_crud import generate_quiz_from_file, extract_text_from_file
-import os
 from pydantic import BaseModel
 from models import Quiz, Retry
 from typing import List
+from retry.retry_crud import save_retry
+import os
 
 router = APIRouter(prefix="/quiz", tags=["quiz"])
 
@@ -16,23 +17,22 @@ class UserAnswer(BaseModel):
 class SubmitAnswersRequest(BaseModel):
     answers: List[UserAnswer]
 
-# 파일 경로 기반 퀴즈 생성 엔드포인트
+# 파일 업로드 기반 퀴즈 생성 엔드포인트
 @router.post("/generate-from-file")
-async def generate_quiz_from_file_path(
-    file_path: str, db: Session = Depends(get_quizdb)
+async def generate_quiz_from_uploaded_file(
+    file: UploadFile = File(...), db: Session = Depends(get_quizdb)
 ):
     """
-    프론트엔드에서 제공된 파일 경로를 기반으로 퀴즈를 생성합니다.
+    업로드된 파일을 기반으로 퀴즈를 생성합니다.
     """
     try:
-        # 파일 경로 유효성 확인
-        if not os.path.exists(file_path):
-            raise HTTPException(status_code=400, detail="유효하지 않은 파일 경로입니다.")
-        
-        # 파일에서 텍스트 추출
-        file_text = extract_text_from_file(file_path)
-        if not file_text.strip():
-            raise HTTPException(status_code=400, detail="파일에서 텍스트를 추출할 수 없습니다.")
+        # 업로드된 파일 읽기
+        file_content = await file.read()
+        if not file_content.strip():
+            raise HTTPException(status_code=400, detail="파일 내용이 비어 있습니다.")
+
+        # 텍스트 추출
+        file_text = file_content.decode("utf-8")
         
         # OpenAI를 사용해 퀴즈 생성
         response = generate_quiz_from_file(file_text, db)
@@ -40,7 +40,27 @@ async def generate_quiz_from_file_path(
         return {"message": "Quiz generated successfully", "result": response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+@router.post("/user-answers")
+async def get_user_answers(request: SubmitAnswersRequest, db: Session = Depends(get_quizdb)):
+    """
+    사용자가 제출한 답변을 데이터베이스에 저장합니다.
+    """
+    try:
+        for user_answer in request.answers:
+            # 답변 저장
+            user_answer_entry = Quiz(
+                quiz_id=user_answer.quiz_id,
+                user_answer=user_answer.user_answer
+            )
+            db.add(user_answer_entry)
+
+        db.commit()
+
+        return {"message": "Answers saved successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.post("/submit")
 async def submit_answers(
     request: SubmitAnswersRequest, db: Session = Depends(get_quizdb)
@@ -71,15 +91,8 @@ async def submit_answers(
                 })
                 is_correct = False
 
-            # Retry 테이블에 기록 (선택 사항)
-            retry_entry = Retry(
-                quiz_id=quiz.quiz_id,
-                user_id=1,  # 사용자 ID (로그인 기능이 있다면 연결 필요)
-                is_correct=is_correct,
-            )
-            db.add(retry_entry)
-
-        db.commit()
+            # Retry 테이블에 저장
+            save_retry(db, incorrect_answers=incorrect_questions)
 
         return {
             "message": "Answers submitted successfully",

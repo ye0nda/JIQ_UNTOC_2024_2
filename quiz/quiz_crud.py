@@ -140,3 +140,18 @@ def normalize_keys(data):
     elif isinstance(data, dict):
         return {key.replace(" ", "_"): value for key, value in data.items()}
     return data
+
+def save_user_answer(db: Session, answers: list[dict]):
+    """
+    사용자 답변을 데이터베이스에 저장합니다.
+    :param db: 데이터베이서 세션
+    :param answers: 사용자 답변 리스트 [{"quiz_id": int, "user_answer": str}]
+    """
+    for answer in answers:
+        entry = Quiz(
+            quiz_id=answer["quiz_id"],
+            user_answer=answer["user_answer"]
+        )
+        db.add(entry)
+
+    db.commit()
