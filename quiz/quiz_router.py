@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from database import get_quizdb
 from quiz.quiz_crud import generate_quiz_from_file, extract_text_from_file, split_text_by_limit
 from pydantic import BaseModel
@@ -35,24 +36,33 @@ async def generate_quiz_from_uploaded_file(
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
+        # quiz_id 생성 (현재 최대 quiz_id를 가져와 +1)
+        max_quiz_id = db.query(func.max(Quiz.quiz_id)).scalar() or 0
+        quiz_id = max_quiz_id + 1
+
         # 텍스트 추출
         file_text = extract_text_from_file(file_path)
         if not file_text.strip():
             raise HTTPException(status_code=400, detail="파일 내용이 비어 있습니다.")
 
-        # 텍스트를 분할하여 처리
+        # 텍스트 분할 및 퀴즈 생성
         text_chunks = split_text_by_limit(file_text)
         all_questions = []
 
         for chunk in text_chunks:
-            response = generate_quiz_from_file(chunk, db)
+            response = generate_quiz_from_file(chunk, db, quiz_id=quiz_id)
             if response:
                 all_questions.extend(response)
 
         if not all_questions:
             raise HTTPException(status_code=400, detail="퀴즈를 생성할 수 없습니다.")
 
-        return {"message": "Quiz generated successfully", "result": all_questions}
+        # quiz_id를 문자열로 변환하여 반환
+        return {
+            "message": "Quiz generated successfully",
+            "quiz_id": str(quiz_id),  # 문자열 변환
+            "result": all_questions,
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

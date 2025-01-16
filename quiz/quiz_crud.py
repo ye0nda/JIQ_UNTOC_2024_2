@@ -6,6 +6,7 @@ import os
 from models import Quiz
 from datetime import datetime
 from typing import List
+import uuid
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -31,7 +32,7 @@ def clean_and_parse_gpt_response(content: str):
     except json.JSONDecodeError as e:
         raise ValueError(f"JSON 파싱 오류: {str(e)}")
 
-def generate_quiz_from_file(file_text: str, db: Session, max_questions: int = 10):
+def generate_quiz_from_file(file_text: str, db: Session, quiz_id: int, max_questions: int = 10):
     """
     주어진 텍스트 파일 내용으로부터 단답형 퀴즈를 생성합니다. 문제 수를 제한합니다.
 
@@ -70,26 +71,22 @@ def generate_quiz_from_file(file_text: str, db: Session, max_questions: int = 10
         # JSON 키를 Python 스타일로 변환
         quizzes = normalize_keys(quizzes)
 
-        print("Normalized Quizzes:", quizzes)  # 디버깅용 출력
-
         if not isinstance(quizzes, list):
             raise ValueError("응답 데이터가 JSON 배열 형식이 아닙니다.")
 
         quizzes = quizzes[:max_questions]
 
-        for item in quizzes:
-            question_number = item.get("question_number")
+        for idx, item in enumerate(quizzes[:max_questions], start=1):
+            question_number = item.get("question_number", idx)
             question = item.get("question")
             answer = item.get("answer")
 
-            if not question_number or not question or not answer:
+            if not question or not answer:
                 raise ValueError(f"JSON 데이터에 누락된 필드가 있습니다: {item}")
-
-            if not isinstance(answer, str):
-                raise ValueError(f"Answer가 문자열이 아닙니다: {item}")
 
             # Quiz 객체 생성 및 DB 저장
             new_quiz = Quiz(
+                quiz_id=quiz_id,
                 quiz_number=question_number,
                 quiz_question=question,
                 quiz_answer=answer,
@@ -98,11 +95,8 @@ def generate_quiz_from_file(file_text: str, db: Session, max_questions: int = 10
             db.add(new_quiz)
 
         db.commit()
+        return {"message": f"Quiz {str(quiz_id)} created successfully", "quiz_id": str(quiz_id)}
 
-        return {"message": "단답형 퀴즈가 성공적으로 생성되었습니다", "questions_created": len(quizzes)}
-
-    except json.JSONDecodeError as e:
-        raise ValueError(f"JSON 파싱 오류: {str(e)}")
     except Exception as e:
         db.rollback()
         raise Exception(f"퀴즈 생성 실패: {str(e)}")
