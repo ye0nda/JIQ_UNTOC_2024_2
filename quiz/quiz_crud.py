@@ -172,9 +172,6 @@ def update_user_answer(db: Session, quiz_id: int, quiz_number: int, user_answer:
     return quiz_entry
 
 
-
-
-
 def split_text_by_limit(text: str, max_length: int = 8000) -> List[str]:
     """
     텍스트를 최대 길이에 맞게 분할합니다.
@@ -194,3 +191,19 @@ def split_text_by_limit(text: str, max_length: int = 8000) -> List[str]:
         chunks.append(current_chunk.strip())
 
     return chunks
+
+def save_retry(db: Session, incorrect_answers: List[dict]):
+    """
+    오답 데이터를 retry_attempts 테이블에 저장합니다.
+    """
+    for answer in incorrect_answers:
+        entry = Retry(
+            quiz_id=answer["quiz_id"],
+            quiz_number=answer["quiz_number"],
+            user_answer=answer["user_answer"],
+            correct_answer=answer["correct_answer"],
+            retry_question=answer["retry_question"],
+            is_correct=answer["is_correct"],
+        )
+        db.add(entry)
+    db.commit()

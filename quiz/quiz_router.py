@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from database import get_quizdb, get_retrydb
@@ -72,9 +72,11 @@ async def submit_user_answers(
     request: SubmitAnswersRequest, db: Session = Depends(get_quizdb)
 ):
     """
-    여러 답변을 한 번에 업데이트하는 라우터 및 CRUD 통합
+    여러 답변을 한 번에 업데이트하고, 채점 후 retry_attempts 테이블에 결과를 저장.
     """
     try:
+        retry_entries = []
+
         for answer in request.answers:
             # quiz_id와 quiz_number로 Quiz 항목 찾기
             quiz_entry = db.query(Quiz).filter(
@@ -90,55 +92,34 @@ async def submit_user_answers(
             quiz_entry.user_answer = answer.user_answer
             db.add(quiz_entry)
 
+            # 채점 로직
+            is_correct = quiz_entry.quiz_answer.strip().lower() == answer.user_answer.strip().lower()
+
+            # retry_attempts 테이블에 저장할 데이터 준비
+            retry_entries.append(
+                Retry(
+                    quiz_id=answer.quiz_id,
+                    quiz_number=answer.quiz_number,
+                    retry_question=quiz_entry.quiz_question,
+                    user_answer=answer.user_answer,
+                    correct_answer=quiz_entry.quiz_answer,
+                    is_correct=is_correct
+                )
+            )
+
+        # 모든 변경 사항 커밋
         db.commit()
-        return {"message": "User answers updated successfully"}
+
+        # retry_attempts 테이블에 데이터 저장
+        db.add_all(retry_entries)
+        db.commit()
+
+        return {"message": "User answers updated and results saved successfully"}
+
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error updating user answers: {str(e)}")
 
-
-@router.post("/submit")
-async def submit_answers(
-    request: SubmitAnswersRequest, db: Session = Depends(get_quizdb)
-):
-    """
-    사용자가 제출한 답변을 채점합니다.
-    """
-    try:
-        correct_count = 0
-        total_questions = len(request.answers)
-        incorrect_questions = []
-
-        for user_answer in request.answers:
-            quiz = db.query(Quiz).filter(Quiz.quiz_id == user_answer.quiz_id, Quiz.quiz_number == user_answer.quiz_number).first()
-            if not quiz:
-                raise HTTPException(status_code=404, detail=f"Quiz ID {user_answer.quiz_id} not found")
-
-            # 정답 비교
-            if quiz.quiz_answer.strip().lower() == user_answer.user_answer.strip().lower():
-                correct_count += 1
-                is_correct = True
-            else:
-                incorrect_questions.append({
-                    "quiz_id": quiz.quiz_id,
-                    "question": quiz.quiz_question,
-                    "correct_answer": quiz.quiz_answer,
-                    "user_answer": user_answer.user_answer,
-                })
-                is_correct = False
-
-            # Retry 테이블에 저장
-            save_retry(db, incorrect_answers=incorrect_questions)
-
-        return {
-            "message": "Answers submitted successfully",
-            "total_questions": total_questions,
-            "correct_count": correct_count,
-            "incorrect_questions": incorrect_questions
-        }
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
     
 @router.get("/get-quiz/{quiz_id}")
 async def get_quiz(quiz_id: int, db: Session = Depends(get_quizdb)):

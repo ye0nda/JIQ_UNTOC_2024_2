@@ -5,6 +5,8 @@ from datetime import datetime
 # Retry 테이블
 class Retry(RetryBase):
     __tablename__ = "retry_attempts"
+    __table_args__ = {'schema': 'retry'}
+    
     retry_id = Column(Integer, primary_key=True, index=True) # 퀴즈 아이디랑 같게게
     quiz_id = Column(Integer)
     quiz_number = Column(Integer, nullable=False)
