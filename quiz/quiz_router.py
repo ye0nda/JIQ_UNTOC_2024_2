@@ -75,7 +75,7 @@ async def submit_user_answers(
     사용자의 답변을 저장합니다.
     """
     try:
-        save_user_answer(db, request.answers, request.user_id)
+        save_user_answer(db, request.answers)
         return {"message": "User answers saved successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

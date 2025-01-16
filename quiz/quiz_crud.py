@@ -155,7 +155,7 @@ def normalize_keys(data):
         return {key.replace(" ", "_"): value for key, value in data.items()}
     return data
 
-def save_user_answer(db: Session, answers: List[dict], user_id: int):
+def save_user_answer(db: Session, answers: List[dict]):
     """
     사용자 답변을 user_answers 테이블에 저장합니다.
     """
@@ -176,7 +176,6 @@ def save_user_answer(db: Session, answers: List[dict], user_id: int):
             new_entry = Retry(
                 quiz_id=quiz.quiz_id,
                 quiz_number=quiz.quiz_number,
-                user_id=user_id,  # 사용자 ID
                 user_answer=answer["user_answer"],
                 retry_question=quiz.quiz_question,  # quiz_question 자동 가져오기
                 correct_answer=quiz.quiz_answer,  # quiz_answer 자동 가져오기
@@ -188,6 +187,7 @@ def save_user_answer(db: Session, answers: List[dict], user_id: int):
     except Exception as e:
         db.rollback()
         raise Exception(f"사용자 답변 저장 실패: {str(e)}")
+
 
 
 
