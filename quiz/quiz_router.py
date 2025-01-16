@@ -67,26 +67,26 @@ async def generate_quiz_from_uploaded_file(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/user-answers")
-async def get_user_answers(request: SubmitAnswersRequest, db: Session = Depends(get_quizdb)):
+def save_user_answer(db: Session, answers: List[dict], user_id: int):
     """
-    사용자가 제출한 답변을 데이터베이스에 저장합니다.
+    사용자 답변을 user_answers 테이블에 저장합니다.
     """
     try:
-        for user_answer in request.answers:
-            # 답변 저장
-            user_answer_entry = Quiz(
-                quiz_id=user_answer.quiz_id,
-                quiz_number=user_answer.quiz_number,
-                user_answer=user_answer.user_answer
+        for answer in answers:
+            # 새로운 사용자 응답 데이터 생성
+            new_entry = UserAnswer(
+                quiz_id=answer["quiz_id"],
+                quiz_number=answer["quiz_number"],
+                user_id=user_id,  # 사용자 ID
+                user_answer=answer["user_answer"],
+                is_correct=None  # 정답 여부는 채점 후 업데이트
             )
-            db.add(user_answer_entry)
+            db.add(new_entry)
 
         db.commit()
-
-        return {"message": "Answers saved successfully"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        db.rollback()
+        raise Exception(f"사용자 답변 저장 실패: {str(e)}")
 
 @router.post("/submit")
 async def submit_answers(
