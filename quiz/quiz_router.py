@@ -67,15 +67,34 @@ async def generate_quiz_from_uploaded_file(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/update_user_answer")
-async def update_user_answer_endpoint(
-    data: UserAnswer, 
-    db: Session = Depends(get_quizdb)
+@router.post("/user-answers")
+async def submit_user_answers(
+    request: SubmitAnswersRequest, db: Session = Depends(get_quizdb)
 ):
     """
-    프론트엔드로부터 받은 데이터를 기반으로 user_answer를 업데이트합니다.
+    여러 답변을 한 번에 업데이트하는 라우터 및 CRUD 통합
     """
-    return update_user_answer(db, data.quiz_id, data.quiz_number, data.user_answer)
+    try:
+        for answer in request.answers:
+            # quiz_id와 quiz_number로 Quiz 항목 찾기
+            quiz_entry = db.query(Quiz).filter(
+                Quiz.quiz_id == answer.quiz_id,
+                Quiz.quiz_number == answer.quiz_number
+            ).first()
+
+            if not quiz_entry:
+                print(f"Quiz not found for quiz_id={answer.quiz_id} and quiz_number={answer.quiz_number}")
+                continue
+
+            # user_answer 업데이트
+            quiz_entry.user_answer = answer.user_answer
+            db.add(quiz_entry)
+
+        db.commit()
+        return {"message": "User answers updated successfully"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error updating user answers: {str(e)}")
 
 
 @router.post("/submit")
