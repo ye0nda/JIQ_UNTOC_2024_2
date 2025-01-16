@@ -7,6 +7,7 @@ from models import Quiz, Retry
 from datetime import datetime
 from typing import List
 import uuid
+from quiz.quiz_router import UserAnswer
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -155,7 +156,7 @@ def normalize_keys(data):
         return {key.replace(" ", "_"): value for key, value in data.items()}
     return data
 
-def save_user_answer(db: Session, answers: List[dict]):
+def save_user_answer(db: Session, answers: List[UserAnswer]):
     """
     사용자 답변을 user_answers 테이블에 저장합니다.
     """
