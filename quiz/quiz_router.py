@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
 from database import get_quizdb
-from quiz.quiz_crud import generate_quiz_from_file, extract_text_from_file
+from quiz.quiz_crud import generate_quiz_from_file, extract_text_from_file, split_text_by_limit
 from pydantic import BaseModel
 from models import Quiz, Retry
 from typing import List
 from retry.retry_crud import save_retry
 import os
+import shutil
 
 router = APIRouter(prefix="/quiz", tags=["quiz"])
 
@@ -17,6 +18,9 @@ class UserAnswer(BaseModel):
 class SubmitAnswersRequest(BaseModel):
     answers: List[UserAnswer]
 
+UPLOAD_DIR = "./uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 # 파일 업로드 기반 퀴즈 생성 엔드포인트
 @router.post("/generate-from-file")
 async def generate_quiz_from_uploaded_file(
@@ -26,18 +30,29 @@ async def generate_quiz_from_uploaded_file(
     업로드된 파일을 기반으로 퀴즈를 생성합니다.
     """
     try:
-        # 업로드된 파일 읽기
-        file_content = await file.read()
-        if not file_content.strip():
-            raise HTTPException(status_code=400, detail="파일 내용이 비어 있습니다.")
+        # 업로드된 파일 저장
+        file_path = os.path.join(UPLOAD_DIR, file.filename)
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
 
         # 텍스트 추출
-        file_text = file_content.decode("utf-8")
-        
-        # OpenAI를 사용해 퀴즈 생성
-        response = generate_quiz_from_file(file_text, db)
+        file_text = extract_text_from_file(file_path)
+        if not file_text.strip():
+            raise HTTPException(status_code=400, detail="파일 내용이 비어 있습니다.")
 
-        return {"message": "Quiz generated successfully", "result": response}
+        # 텍스트를 분할하여 처리
+        text_chunks = split_text_by_limit(file_text)
+        all_questions = []
+
+        for chunk in text_chunks:
+            response = generate_quiz_from_file(chunk, db)
+            if response:
+                all_questions.extend(response)
+
+        if not all_questions:
+            raise HTTPException(status_code=400, detail="퀴즈를 생성할 수 없습니다.")
+
+        return {"message": "Quiz generated successfully", "result": all_questions}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

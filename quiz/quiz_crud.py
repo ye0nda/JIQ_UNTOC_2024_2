@@ -9,7 +9,6 @@ from typing import List
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-
 def clean_and_parse_gpt_response(content: str):
     """
     GPT 응답에서 JSON 코드 블록을 정리하고 파싱합니다.
@@ -28,15 +27,9 @@ def clean_and_parse_gpt_response(content: str):
     content = content.strip()
 
     try:
-        content = bytes(content, "utf-8").decode("unicode_escape")  # 유니코드 이스케이프 처리
-    except Exception as e:
-        raise ValueError(f"UTF-8 디코딩 오류: {str(e)}")
-
-    try:
         return json.loads(content)
     except json.JSONDecodeError as e:
         raise ValueError(f"JSON 파싱 오류: {str(e)}")
-
 
 def generate_quiz_from_file(file_text: str, db: Session, max_questions: int = 10):
     """
@@ -48,7 +41,7 @@ def generate_quiz_from_file(file_text: str, db: Session, max_questions: int = 10
     """
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4o-mini",
+            model="gpt-4",
             messages=[
                 {
                     "role": "system",
@@ -114,23 +107,32 @@ def generate_quiz_from_file(file_text: str, db: Session, max_questions: int = 10
         db.rollback()
         raise Exception(f"퀴즈 생성 실패: {str(e)}")
 
-
 def extract_text_from_file(file_path: str) -> str:
     """
     주어진 파일 경로에서 텍스트를 추출합니다.
     현재 PDF와 TXT 파일만 지원합니다.
     """
     if file_path.endswith(".pdf"):
-        reader = PdfReader(file_path)
-        extracted_text = "".join(page.extract_text() for page in reader.pages)
-        # UTF-8로 인코딩 변환
-        return extracted_text.encode("utf-8", "ignore").decode("utf-8", "ignore")
+        try:
+            reader = PdfReader(file_path)
+            extracted_text = ""
+            for page in reader.pages:
+                text = page.extract_text()
+                if text:
+                    extracted_text += text
+            # UTF-8로 안전하게 변환
+            return extracted_text.encode("utf-8", "ignore").decode("utf-8", "ignore")
+        except Exception as e:
+            raise ValueError(f"PDF 텍스트 추출 실패: {str(e)}")
     elif file_path.endswith(".txt"):
-        with open(file_path, "r", encoding="utf-8") as txt_file:
-            return txt_file.read()
+        try:
+            with open(file_path, "r", encoding="utf-8") as txt_file:
+                return txt_file.read()
+        except Exception as e:
+            raise ValueError(f"TXT 파일 읽기 실패: {str(e)}")
     else:
         raise ValueError("지원되지 않는 파일 형식입니다.")
-    
+
 def normalize_keys(data):
     """
     JSON 데이터의 키를 Python 스타일로 변환.
@@ -148,11 +150,35 @@ def save_user_answer(db: Session, answers: List[dict]):
     :param db: 데이터베이서 세션
     :param answers: 사용자 답변 리스트 [{"quiz_id": int, "user_answer": str}]
     """
-    for answer in answers:
-        entry = Quiz(
-            quiz_id=answer["quiz_id"],
-            user_answer=answer["user_answer"]
-        )
-        db.add(entry)
+    try:
+        for answer in answers:
+            entry = Quiz(
+                quiz_id=answer["quiz_id"],
+                user_answer=answer["user_answer"]
+            )
+            db.add(entry)
 
-    db.commit()
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise Exception(f"사용자 답변 저장 실패: {str(e)}")
+
+def split_text_by_limit(text: str, max_length: int = 8000) -> List[str]:
+    """
+    텍스트를 최대 길이에 맞게 분할합니다.
+    """
+    paragraphs = text.split("\n")
+    chunks = []
+    current_chunk = ""
+
+    for paragraph in paragraphs:
+        if len(current_chunk) + len(paragraph) + 1 <= max_length:
+            current_chunk += paragraph + "\n"
+        else:
+            chunks.append(current_chunk.strip())
+            current_chunk = paragraph + "\n"
+
+    if current_chunk.strip():
+        chunks.append(current_chunk.strip())
+
+    return chunks
