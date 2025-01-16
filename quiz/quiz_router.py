@@ -14,6 +14,7 @@ router = APIRouter(prefix="/quiz", tags=["quiz"])
 
 class UserAnswer(BaseModel):
     quiz_id: int
+    quiz_number: int
     user_answer: str
 
 class SubmitAnswersRequest(BaseModel):
@@ -76,6 +77,7 @@ async def get_user_answers(request: SubmitAnswersRequest, db: Session = Depends(
             # 답변 저장
             user_answer_entry = Quiz(
                 quiz_id=user_answer.quiz_id,
+                quiz_number=user_answer.quiz_number,
                 user_answer=user_answer.user_answer
             )
             db.add(user_answer_entry)
@@ -99,7 +101,7 @@ async def submit_answers(
         incorrect_questions = []
 
         for user_answer in request.answers:
-            quiz = db.query(Quiz).filter(Quiz.quiz_id == user_answer.quiz_id).first()
+            quiz = db.query(Quiz).filter(Quiz.quiz_id == user_answer.quiz_id, Quiz.quiz_number == user_answer.quiz_number).first()
             if not quiz:
                 raise HTTPException(status_code=404, detail=f"Quiz ID {user_answer.quiz_id} not found")
 
