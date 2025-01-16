@@ -157,9 +157,7 @@ def normalize_keys(data):
 
 def save_user_answer(db: Session, answers: List[dict]):
     """
-    사용자 답변을 데이터베이스에 저장합니다.
-    :param db: 데이터베이서 세션
-    :param answers: 사용자 답변 리스트 [{"quiz_id": int, "user_answer": str}]
+    사용자 답변을 데이터베이스에 저장 또는 업데이트합니다.
     """
     try:
         for answer in answers:
@@ -170,21 +168,16 @@ def save_user_answer(db: Session, answers: List[dict]):
             ).first()
 
             if quiz:
-                # 기존 데이터가 있으면 업데이트
+                # 기존 데이터가 있으면 user_answer만 업데이트
                 quiz.user_answer = answer["user_answer"]
             else:
-                # 기존 데이터가 없으면 새로 추가
-                new_entry = Quiz(
-                    quiz_id=answer["quiz_id"],
-                    quiz_number=answer["quiz_number"],
-                    user_answer=answer["user_answer"]
-                )
-                db.add(new_entry)
+                raise ValueError(f"Quiz with quiz_id {answer['quiz_id']} and quiz_number {answer['quiz_number']} does not exist.")
 
         db.commit()
     except Exception as e:
         db.rollback()
         raise Exception(f"사용자 답변 저장 실패: {str(e)}")
+
 
 
 def split_text_by_limit(text: str, max_length: int = 8000) -> List[str]:
