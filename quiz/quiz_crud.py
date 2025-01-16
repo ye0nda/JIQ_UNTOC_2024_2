@@ -7,7 +7,6 @@ from models import Quiz, Retry
 from datetime import datetime
 from typing import List
 import uuid
-from quiz.quiz_router import UserAnswer
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -156,38 +155,22 @@ def normalize_keys(data):
         return {key.replace(" ", "_"): value for key, value in data.items()}
     return data
 
-def save_user_answer(db: Session, answers: List[UserAnswer]):
-    """
-    사용자 답변을 user_answers 테이블에 저장합니다.
-    """
-    try:
-        for answer in answers:
-            # 기존 Quiz에서 quiz_question과 quiz_answer 가져오기
-            quiz = db.query(Quiz).filter(
-                Quiz.quiz_id == answer.quiz_id,
-                Quiz.quiz_number == answer.quiz_number
-            ).first()
+def update_user_answer(db: Session, quiz_id: int, quiz_number: int, user_answer: str):
+    # 해당 quiz_id와 quiz_number를 가진 퀴즈를 조회
+    quiz_entry = db.query(Quiz).filter(
+        Quiz.id == quiz_id,
+        Quiz.number == quiz_number
+    ).first()
+    
+    if not quiz_entry:
+        raise ValueError("해당 퀴즈 항목을 찾을 수 없습니다.")
+    
+    # user_answer 업데이트
+    quiz_entry.user_answer = user_answer
+    db.commit()
+    db.refresh(quiz_entry)
+    return quiz_entry
 
-            if not quiz:
-                raise ValueError(
-                    f"Quiz with quiz_id {answer['quiz_id']} and quiz_number {answer['quiz_number']} not found."
-                )
-
-            # 새로운 사용자 응답 데이터 생성
-            new_entry = Retry(
-                quiz_id=quiz.quiz_id,
-                quiz_number=quiz.quiz_number,
-                user_answer=answer["user_answer"],
-                retry_question=quiz.quiz_question,  # quiz_question 자동 가져오기
-                correct_answer=quiz.quiz_answer,  # quiz_answer 자동 가져오기
-                is_correct=(quiz.quiz_answer.strip().lower() == answer["user_answer"].strip().lower())  # 정답 여부 판정
-            )
-            db.add(new_entry)
-
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        raise Exception(f"사용자 답변 저장 실패: {str(e)}")
 
 
 

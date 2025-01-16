@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from database import get_quizdb, get_retrydb
-from quiz.quiz_crud import generate_quiz_from_file, extract_text_from_file, split_text_by_limit, save_user_answer
+from quiz.quiz_crud import generate_quiz_from_file, extract_text_from_file, split_text_by_limit, update_user_answer
 from pydantic import BaseModel
 from models import Quiz, Retry
 from typing import List
@@ -67,18 +67,15 @@ async def generate_quiz_from_uploaded_file(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/user-answers")
-async def submit_user_answers(
-    request: SubmitAnswersRequest, db: Session = Depends(get_quizdb)
+@router.post("/update_user_answer")
+async def update_user_answer_endpoint(
+    data: UserAnswer, 
+    db: Session = Depends(get_quizdb)
 ):
     """
-    사용자의 답변을 저장합니다.
+    프론트엔드로부터 받은 데이터를 기반으로 user_answer를 업데이트합니다.
     """
-    try:
-        save_user_answer(db, request.answers)
-        return {"message": "User answers saved successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return update_user_answer(db, data.quiz_id, data.quiz_number, data.user_answer)
 
 
 @router.post("/submit")
