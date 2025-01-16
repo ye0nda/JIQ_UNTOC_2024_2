@@ -6,14 +6,14 @@ from datetime import datetime
 class Retry(RetryBase):
     __tablename__ = "retry_attempts"
     __table_args__ = {'schema': 'retry'}
-    
-    retry_id = Column(Integer, primary_key=True, index=True) # 퀴즈 아이디랑 같게게
-    quiz_id = Column(Integer)
+
+    retry_id = Column(Integer, primary_key=True, index=True)
+    quiz_id = Column(Integer, nullable=False)
     quiz_number = Column(Integer, nullable=False)
-    user_answer = Column(String(255), nullable=False) # 사용자가 제출한 답변
-    correct_answer = Column(String(255), nullable=False) # 정답
-    retry_question = Column(String(255), nullable=False) # 질문 내용
-    is_correct = Column(Boolean, default=False) # 정답 여부 (default: False)
+    correct_answer = Column(String(255), nullable=False)
+    user_answer = Column(String(255), nullable=False)
+    retry_question = Column(String(255), nullable=False)
+    is_correct = Column(Boolean, default=False)
 
 # Folder 테이블
 class Folder(FolderBase):
